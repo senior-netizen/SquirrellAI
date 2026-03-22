@@ -1,0 +1,9 @@
+{
+  "name": "squirrellai",
+  "private": true,
+  "version": "1.0.0",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test apps/ai-engine/src/__tests__/*.spec.js"
+  }
+}
