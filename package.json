@@ -1,0 +1,14 @@
+{
+  "name": "squirrellai-sandbox-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Execution sandbox infrastructure for generated NestJS projects",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test dist/test/**/*.spec.js"
+  },
+  "devDependencies": {
+    "@types/node": "20.11.30",
+    "typescript": "5.4.3"
+  }
+}
