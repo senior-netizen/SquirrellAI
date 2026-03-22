@@ -1,0 +1,11 @@
+{
+  "name": "squirrellai",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "node --test packages/ai-engine/test/*.test.js"
+  }
+}
