@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.squirrellai.local/tool-response.schema.json",
+  "title": "ToolResponsePayload",
+  "type": "object",
+  "required": ["toolName", "status", "output", "completedAt"],
+  "properties": {
+    "toolName": { "type": "string" },
+    "status": { "enum": ["SUCCEEDED", "FAILED"] },
+    "output": { "type": "object", "additionalProperties": true },
+    "errorMessage": { "type": "string" },
+    "completedAt": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

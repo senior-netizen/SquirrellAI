@@ -1,0 +1,1 @@
+"""HTTP-facing API adapters."""

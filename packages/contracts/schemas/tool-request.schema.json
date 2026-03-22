@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.squirrellai.local/tool-request.schema.json",
+  "title": "ToolRequestPayload",
+  "type": "object",
+  "required": ["toolName", "action", "input", "context"],
+  "properties": {
+    "toolName": { "type": "string", "minLength": 1 },
+    "action": { "type": "string", "minLength": 1 },
+    "input": { "type": "object", "additionalProperties": true },
+    "context": {
+      "type": "object",
+      "required": ["executionId", "agentId", "correlationId", "requestedAt"],
+      "properties": {
+        "executionId": { "type": "string" },
+        "agentId": { "type": "string" },
+        "correlationId": { "type": "string" },
+        "requestedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
