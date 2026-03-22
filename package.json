@@ -1,35 +1,19 @@
 {
-  "name": "squirrell-ai-observability",
+  "name": "squirrellai-monorepo",
   "version": "0.1.0",
   "private": true,
-  "workspaces": [
-    "packages/*",
-    "services/*"
-  ],
+  "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "build": "npm run build --workspaces",
-    "test": "node --test tests/*.spec.ts",
-    "typecheck": "tsc -b tsconfig.build.json"
-  },
-  "dependencies": {
-    "@nestjs/common": "^11.1.6",
-    "@nestjs/core": "^11.1.6",
-    "@nestjs/platform-express": "^11.1.6",
-    "@nestjs/typeorm": "^11.0.0",
-    "bullmq": "^5.58.0",
-    "class-transformer": "^0.5.1",
-    "class-validator": "^0.14.2",
-    "ioredis": "^5.7.0",
-    "pg": "^8.16.3",
-    "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2",
-    "typeorm": "^0.3.26",
-    "uuid": "^13.0.0",
-    "express": "^5.1.0"
+    "build": "pnpm --filter @squirrellai/contracts build && pnpm --filter @squirrellai/core-platform build",
+    "lint": "pnpm --filter @squirrellai/contracts lint && pnpm --filter @squirrellai/core-platform lint",
+    "format": "prettier --check ."
   },
   "devDependencies": {
-    "@types/node": "^24.5.2",
-    "typescript": "^5.9.2",
-    "@types/express": "^5.0.3"
+    "@typescript-eslint/eslint-plugin": "^8.18.1",
+    "@typescript-eslint/parser": "^8.18.1",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2"
   }
 }

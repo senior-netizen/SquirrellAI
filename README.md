@@ -1,26 +1,62 @@
-# SquirrellAI Observability Monorepo
+# SquirrellAI
 
-This repository provides a production-oriented baseline for making observability a first-class feature across two services:
+SquirrellAI is organized as a polyglot monorepo with a clear split between the control plane and the execution plane.
 
-- `services/api-gateway`: NestJS API gateway with execution management endpoints.
-- `services/ai-engine`: asynchronous BullMQ worker that processes executions.
-- `packages/observability`: shared Postgres entities, Redis queue contracts, correlation propagation, and redaction utilities.
+## System boundaries
 
-## Architecture
+- `apps/core-platform`: NestJS control-plane API for agent registry, authentication, execution lifecycle management, tool registry, and observability.
+- `apps/ai-engine`: FastAPI execution-plane service responsible for orchestration-facing AI execution logic and tool adapters.
+- `packages/contracts`: shared TypeScript contracts and JSON schema artifacts used to keep both services aligned.
+- `infra/docker` and `infra/compose`: container definitions and local orchestration primitives.
+- `docs/architecture` and `docs/api`: architecture records and API contract references.
 
-1. API requests enter the NestJS gateway.
-2. A correlation ID is accepted or generated and returned via `x-correlation-id`.
-3. Execution metadata is persisted to PostgreSQL.
-4. A BullMQ job is dispatched to Redis for asynchronous execution.
-5. The AI engine consumes the job, updates execution state, writes ordered steps/logs, and schedules retries when failures occur.
-6. Log payloads and errors are redacted before they reach durable storage.
+## Repository layout
 
-## API surface
+```text
+apps/
+  core-platform/
+  ai-engine/
+packages/
+  contracts/
+infra/
+  docker/
+  compose/
+docs/
+  architecture/
+  api/
+```
 
-- `POST /agents/:id/executions`
-- `GET /agents/:id/executions`
-- `GET /executions/:executionId`
+## Local startup flow
 
-## Persistence model
+### Prerequisites
+- Node.js 22+
+- pnpm 9+
+- Python 3.10+
 
-The PostgreSQL schema is defined in `services/api-gateway/migrations/0001_observability.sql` and mirrored in TypeORM entities under `packages/observability/src/entities.ts`.
+### Install dependencies
+
+```bash
+corepack enable
+pnpm install --recursive
+python -m pip install -e .[dev]
+```
+
+### Run the services locally
+
+```bash
+pnpm --filter @squirrellai/core-platform start:dev
+uvicorn main:app --app-dir apps/ai-engine/src --reload --port 8000
+```
+
+### Run using Docker Compose
+
+```bash
+docker compose -f infra/compose/docker-compose.yml up --build
+```
+
+## Production orientation
+
+- Shared execution and tool contracts are versioned in-repo.
+- The control plane and execution plane can be built and deployed independently.
+- Baseline CI validates TypeScript and Python toolchains separately.
+- Documentation captures architecture decisions before feature work begins.
