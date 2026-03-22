@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/observability" },
+    { "path": "services/api-gateway" },
+    { "path": "services/ai-engine" }
+  ]
+}
