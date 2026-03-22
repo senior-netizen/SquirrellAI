@@ -1,0 +1,1 @@
+"""SquirrellAI AI engine package."""
