@@ -1,0 +1,10 @@
+{
+  "name": "squirrell-ai",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "test": "node --experimental-strip-types --test apps/ai-engine/tests/*.test.ts"
+  }
+}
