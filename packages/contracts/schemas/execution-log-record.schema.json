@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.squirrellai.local/execution-log-record.schema.json",
+  "title": "ExecutionLogRecord",
+  "type": "object",
+  "required": ["executionId", "sequence", "state", "message", "emittedAt"],
+  "properties": {
+    "executionId": { "type": "string" },
+    "sequence": { "type": "integer", "minimum": 0 },
+    "state": { "$ref": "execution-state.schema.json" },
+    "message": { "type": "string" },
+    "emittedAt": { "type": "string", "format": "date-time" },
+    "metadata": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": false
+}

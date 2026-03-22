@@ -1,16 +1,18 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "declaration": true,
-    "target": "es2021",
-    "sourceMap": true,
-    "outDir": "./dist",
-    "baseUrl": "./",
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "strict": true,
-    "moduleResolution": "node",
     "esModuleInterop": true,
-    "lib": ["es2021", "dom"],
-    "skipLibCheck": true
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "declaration": false,
+    "rootDir": ".",
+    "outDir": "dist",
+    "noEmitOnError": false,
+    "allowImportingTsExtensions": true
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"]
+  "include": ["apps/**/*.ts", "apps/**/*.d.ts", "apps/**/*.json"]
 }

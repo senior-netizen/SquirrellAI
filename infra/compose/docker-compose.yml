@@ -1,0 +1,16 @@
+services:
+  core-platform:
+    build:
+      context: ../..
+      dockerfile: infra/docker/core-platform.Dockerfile
+    environment:
+      PORT: 3000
+    ports:
+      - '3000:3000'
+
+  ai-engine:
+    build:
+      context: ../..
+      dockerfile: infra/docker/ai-engine.Dockerfile
+    ports:
+      - '8000:8000'

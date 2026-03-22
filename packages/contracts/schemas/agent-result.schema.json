@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.squirrellai.local/agent-result.schema.json",
+  "title": "AgentResultPayload",
+  "type": "object",
+  "required": ["executionId", "agentId", "finalState", "summary", "toolResponses", "logs", "producedAt"],
+  "properties": {
+    "executionId": { "type": "string" },
+    "agentId": { "type": "string" },
+    "finalState": { "enum": ["SUCCEEDED", "FAILED", "CANCELLED", "TIMED_OUT"] },
+    "summary": { "type": "string" },
+    "toolResponses": {
+      "type": "array",
+      "items": { "$ref": "tool-response.schema.json" }
+    },
+    "logs": {
+      "type": "array",
+      "items": { "$ref": "execution-log-record.schema.json" }
+    },
+    "producedAt": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}
