@@ -1,8 +1,16 @@
 {
-  "name": "@squirrell/contracts",
-  "version": "1.0.0",
-  "type": "module",
-  "exports": {
-    ".": "./src/index.js"
+  "name": "@squirrellai/contracts",
+  "version": "0.1.0",
+  "private": false,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "schemas"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint 'src/**/*.ts'",
+    "test": "node -e \"console.log('No tests defined yet')\""
   }
 }

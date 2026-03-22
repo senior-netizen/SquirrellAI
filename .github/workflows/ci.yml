@@ -1,0 +1,36 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+
+jobs:
+  typescript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --recursive --frozen-lockfile=false
+      - run: pnpm --filter @squirrellai/contracts build
+      - run: pnpm --filter @squirrellai/core-platform build
+      - run: pnpm lint
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - run: python -m pip install --upgrade pip
+      - run: pip install -e .[dev]
+      - run: ruff check apps/ai-engine/src
+      - run: mypy apps/ai-engine/src

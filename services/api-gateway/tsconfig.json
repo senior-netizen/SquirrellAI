@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@squirrell/observability": [
+        "../../packages/observability/src"
+      ]
+    }
+  },
+  "references": [
+    {
+      "path": "../../packages/observability"
+    }
+  ],
+  "include": [
+    "src/**/*.ts",
+    "../../types/**/*.d.ts"
+  ]
+}
