@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { ExecutionState } from '@squirrellai/contracts';
 import { ExecutionsService } from './executions.service';
 
@@ -14,5 +14,10 @@ export class ExecutionsController {
   @Get('states')
   listStates(): typeof ExecutionState {
     return ExecutionState;
+  }
+
+  @Get(':executionId')
+  getExecution(@Param('executionId') executionId: string): ReturnType<ExecutionsService['getExecution']> {
+    return this.executionsService.getExecution(executionId);
   }
 }

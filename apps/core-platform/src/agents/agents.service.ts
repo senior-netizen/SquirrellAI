@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { mockAgents } from '../data/mock-data';
 
 @Injectable()
 export class AgentsService {
-  listAgents(): Array<{ id: string; status: string }> {
-    return [{ id: 'planner', status: 'available' }];
+  listAgents(): typeof mockAgents {
+    return mockAgents;
   }
 }
