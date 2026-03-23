@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from infrastructure.control_plane_store import load_control_plane_store
+
 
 @dataclass(frozen=True)
 class ToolDescriptor:
@@ -10,4 +12,12 @@ class ToolDescriptor:
 
 class ToolRegistry:
     def list_tools(self) -> list[ToolDescriptor]:
-        return [ToolDescriptor(name="search", owner="ai-engine", timeout_seconds=30)]
+        snapshot = load_control_plane_store()
+        return [
+            ToolDescriptor(
+                name=tool['name'],
+                owner=tool['owner'],
+                timeout_seconds=tool['timeoutSeconds'],
+            )
+            for tool in snapshot.get('tools', [])
+        ]

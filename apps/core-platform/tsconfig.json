@@ -2,8 +2,25 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist"
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@squirrellai/contracts": [
+        "../../packages/contracts/dist/index.d.ts"
+      ],
+      "@squirrellai/contracts/*": [
+        "../../packages/contracts/dist/*"
+      ]
+    },
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["dist", "node_modules"]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
 }

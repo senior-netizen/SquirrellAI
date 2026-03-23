@@ -1,9 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { ExecutionState } from '@squirrellai/contracts';
+import type { CreateExecutionInput, ExecutionRecord } from '@squirrellai/contracts';
+import { ControlPlaneStoreService } from '../persistence/control-plane-store.service';
 
 @Injectable()
 export class ExecutionsService {
-  listExecutions(): Array<{ id: string; state: ExecutionState }> {
-    return [{ id: 'exec_001', state: ExecutionState.Pending }];
+  constructor(private readonly controlPlaneStore: ControlPlaneStoreService) {}
+
+  listExecutions(): Promise<ExecutionRecord[]> {
+    return this.controlPlaneStore.listExecutions();
+  }
+
+  createExecution(input: CreateExecutionInput): Promise<ExecutionRecord> {
+    return this.controlPlaneStore.createExecution(input);
+  }
+
+  getExecutionById(id: string): Promise<ExecutionRecord> {
+    return this.controlPlaneStore.getExecutionById(id);
   }
 }
