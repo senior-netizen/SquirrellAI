@@ -8,6 +8,10 @@ async function bootstrap(): Promise<void> {
   });
   const logger = new Logger('Bootstrap');
 
+  app.enableCors({
+    origin: process.env.CORS_ORIGIN?.split(',').map((origin: string) => origin.trim()) ?? true,
+    credentials: true,
+  });
   app.setGlobalPrefix('v1');
   app.useGlobalPipes(
     new ValidationPipe({

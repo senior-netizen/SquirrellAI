@@ -4,7 +4,12 @@ SquirrellAI is organized as a monorepo with a production service topology rooted
 
 ## 1. Problem analysis
 
-The repository currently contains two parallel implementation paths:
+- `apps/core-platform`: NestJS control-plane API for agent registry, authentication, execution lifecycle management, tool registry, and observability.
+- `apps/ai-engine`: FastAPI execution-plane service responsible for orchestration-facing AI execution logic and tool adapters.
+- `packages/contracts`: shared TypeScript contracts and JSON schema artifacts used to keep both services aligned.
+- `apps/web`: zero-dependency TypeScript operator console for authenticated execution monitoring, registry browsing, and billing visibility.
+- `infra/docker` and `infra/compose`: container definitions and local orchestration primitives.
+- `docs/architecture` and `docs/api`: architecture records and API contract references.
 
 - `services/*` contains the production-oriented control-plane API gateway and AI execution worker with real Postgres and Redis integration.
 - `apps/*` contains earlier scaffolds and prototypes that are useful for exploration but are **not** the authoritative deployment path.
@@ -21,27 +26,10 @@ The canonical production path is therefore:
 ### Canonical production topology
 
 ```text
-client
-  |
-  v
-services/api-gateway
-  |  persists execution state
-  |  enqueues jobs
-  |
-  +--> postgres
-  |
-  +--> redis
-          |
-          v
-    services/ai-engine
-```
-
-### Repository layout
-
-```text
-services/
-  api-gateway/     # canonical control-plane HTTP API
-  ai-engine/       # canonical background execution worker
+apps/
+  core-platform/
+  ai-engine/
+  web/
 packages/
   observability/   # shared entities, queue config, correlation, redaction
   contracts/       # shared external contracts
@@ -71,32 +59,21 @@ pnpm install --recursive
 ### Build the canonical services
 
 ```bash
-pnpm build
+pnpm --filter @squirrellai/core-platform start:dev
+uvicorn main:app --app-dir apps/ai-engine/src --reload --port 8000
+pnpm --filter @squirrellai/web dev
 ```
 
-### Run the canonical services without Docker
+### Frontend configuration
 
-Start infrastructure first:
+The frontend static server runs on `http://localhost:5173` after compiling the TypeScript app into `apps/web/dist`. By default the console calls the local backend services directly:
 
-```bash
-docker compose -f infra/compose/docker-compose.yml up postgres redis -d
-```
+- Core platform: `http://localhost:3000/v1/*`
+- AI engine: `http://localhost:8000/v1/*`
 
-Then run the services in startup order:
+To point the console at different backend hosts, define `window.__SQUIRRELLAI_CONFIG__` before loading `main.js` in `apps/web/index.html` with `coreBaseUrl` and `aiEngineBaseUrl`.
 
-```bash
-DATABASE_URL=postgresql://squirrell:squirrell@localhost:5432/squirrellai \
-REDIS_URL=redis://localhost:6379/0 \
-pnpm --filter @squirrell/api-gateway start
-```
-
-```bash
-DATABASE_URL=postgresql://squirrell:squirrell@localhost:5432/squirrellai \
-REDIS_URL=redis://localhost:6379/0 \
-pnpm --filter @squirrell/ai-engine start
-```
-
-### Run the full canonical stack with Docker Compose
+### Run using Docker Compose
 
 ```bash
 docker compose -f infra/compose/docker-compose.yml up --build
