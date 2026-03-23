@@ -1,0 +1,11 @@
+{
+  "name": "@squirrellai/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && cp index.html dist/index.html && cp src/styles/global.css dist/global.css",
+    "dev": "sh -c 'npm run build && python3 -m http.server 5173 -d dist'",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  }
+}

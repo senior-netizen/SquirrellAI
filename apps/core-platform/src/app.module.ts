@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AccountModule } from './account/account.module';
 import { AgentsModule } from './agents/agents.module';
 import { AuthModule } from './auth/auth.module';
 import { ExecutionsModule } from './executions/executions.module';
