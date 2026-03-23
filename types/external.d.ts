@@ -47,9 +47,12 @@ declare module 'bullmq' {
   export class Queue<T = unknown> {
     constructor(name: string, options?: unknown);
     add(name: string, data: T, opts?: Record<string, unknown>): Promise<void>;
+    close(): Promise<void>;
   }
   export class Worker<T = unknown> {
-    constructor(name: string, processor: (job: { data: T }) => Promise<unknown>, options?: unknown);
+    constructor(name: string, processor: (job: { id?: string; data: T }) => Promise<unknown>, options?: unknown);
+    on(event: 'failed', listener: (job: { id?: string; data: T } | undefined, error: unknown) => void): this;
+    close(): Promise<void>;
   }
 }
 
@@ -80,6 +83,9 @@ declare module 'typeorm' {
     find(options: unknown): Promise<T[]>;
   }
   export class DataSource {
+    constructor(options?: Record<string, unknown>);
+    initialize(): Promise<DataSource>;
+    destroy(): Promise<void>;
     getRepository<T>(target: new () => T): Repository<T>;
   }
 }
@@ -108,8 +114,14 @@ declare module 'node:assert/strict' {
   export default assert;
 }
 
+declare namespace NodeJS {
+  type Signals = 'SIGINT' | 'SIGTERM';
+}
+
 declare const process: {
   env: Record<string, string | undefined>;
+  once(event: NodeJS.Signals, listener: () => void): void;
+  exit(code?: number): never;
 };
 
 declare module 'reflect-metadata';

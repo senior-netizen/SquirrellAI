@@ -1,3 +1,5 @@
+# Legacy prototype image for apps/ai-engine.
+# Do not use for production; use infra/docker/ai-engine-worker.Dockerfile instead.
 FROM python:3.12-slim
 WORKDIR /app
 COPY pyproject.toml README.md ./

@@ -1,3 +1,5 @@
+# Legacy prototype image for apps/core-platform.
+# Do not use for production; use infra/docker/api-gateway.Dockerfile instead.
 FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package.json pnpm-workspace.yaml tsconfig.base.json .eslintrc.cjs .prettierrc.json ./

@@ -1,16 +1,65 @@
 services:
-  core-platform:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: squirrellai
+      POSTGRES_USER: squirrell
+      POSTGRES_PASSWORD: squirrell
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../../services/api-gateway/migrations/0001_observability.sql:/docker-entrypoint-initdb.d/0001_observability.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U squirrell -d squirrellai']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  api-gateway:
     build:
       context: ../..
-      dockerfile: infra/docker/core-platform.Dockerfile
+      dockerfile: infra/docker/api-gateway.Dockerfile
     environment:
       PORT: 3000
+      DATABASE_URL: postgresql://squirrell:squirrell@postgres:5432/squirrellai
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     ports:
       - '3000:3000'
 
   ai-engine:
     build:
       context: ../..
-      dockerfile: infra/docker/ai-engine.Dockerfile
-    ports:
-      - '8000:8000'
+      dockerfile: infra/docker/ai-engine-worker.Dockerfile
+    environment:
+      DATABASE_URL: postgresql://squirrell:squirrell@postgres:5432/squirrellai
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api-gateway:
+        condition: service_started
+
+volumes:
+  postgres-data:
+  redis-data:

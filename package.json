@@ -4,8 +4,8 @@
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "build": "pnpm --filter @squirrellai/contracts build && pnpm --filter @squirrellai/core-platform build",
-    "lint": "pnpm --filter @squirrellai/contracts lint && pnpm --filter @squirrellai/core-platform lint",
+    "build": "pnpm --filter @squirrellai/contracts build && pnpm exec tsc -b tsconfig.build.json",
+    "lint": "pnpm --filter @squirrellai/contracts lint && pnpm --filter @squirrell/observability lint && pnpm --filter @squirrell/api-gateway lint && pnpm --filter @squirrell/ai-engine lint",
     "format": "prettier --check ."
   },
   "devDependencies": {
