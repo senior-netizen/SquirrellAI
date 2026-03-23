@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { mockTools } from '../data/mock-data';
+import type { ToolRecord } from '@squirrellai/contracts';
+import { ControlPlaneStoreService } from '../persistence/control-plane-store.service';
 
 @Injectable()
 export class ToolRegistryService {
-  listTools(): typeof mockTools {
-    return mockTools;
+  constructor(private readonly controlPlaneStore: ControlPlaneStoreService) {}
+
+  listTools(): Promise<ToolRecord[]> {
+    return this.controlPlaneStore.listTools();
   }
 }

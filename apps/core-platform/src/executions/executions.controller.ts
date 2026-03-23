@@ -1,7 +1,11 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { ExecutionState } from '@squirrellai/contracts';
+import type { Request } from 'express';
+import { AuthGuard } from '../auth/auth.guard';
+import { CreateExecutionDto } from './dto/create-execution.dto';
 import { ExecutionsService } from './executions.service';
 
+@UseGuards(AuthGuard)
 @Controller('executions')
 export class ExecutionsController {
   constructor(private readonly executionsService: ExecutionsService) {}
@@ -11,13 +15,25 @@ export class ExecutionsController {
     return this.executionsService.listExecutions();
   }
 
+  @Post()
+  createExecution(
+    @Body() body: CreateExecutionDto,
+    @Req() request: Request & { auth?: { sub: string } },
+  ): ReturnType<ExecutionsService['createExecution']> {
+    return this.executionsService.createExecution({
+      agentId: body.agentId,
+      prompt: body.prompt,
+      requestedBy: request.auth!.sub,
+    });
+  }
+
   @Get('states')
   listStates(): typeof ExecutionState {
     return ExecutionState;
   }
 
-  @Get(':executionId')
-  getExecution(@Param('executionId') executionId: string): ReturnType<ExecutionsService['getExecution']> {
-    return this.executionsService.getExecution(executionId);
+  @Get(':id')
+  getExecutionById(@Param('id') id: string): ReturnType<ExecutionsService['getExecutionById']> {
+    return this.executionsService.getExecutionById(id);
   }
 }

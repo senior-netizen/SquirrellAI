@@ -1,31 +1,20 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { ExecutionState } from '@squirrellai/contracts';
-import { mockExecutionDetails } from '../data/mock-data';
+import { Injectable } from '@nestjs/common';
+import type { CreateExecutionInput, ExecutionRecord } from '@squirrellai/contracts';
+import { ControlPlaneStoreService } from '../persistence/control-plane-store.service';
 
 @Injectable()
 export class ExecutionsService {
-  listExecutions(): Array<{
-    id: string;
-    agentId: string;
-    correlationId: string;
-    prompt: string;
-    state: ExecutionState;
-    requestedAt: string;
-    startedAt: string | null;
-    finishedAt: string | null;
-    summary: string;
-    toolCount: number;
-  }> {
-    return mockExecutionDetails.map(({ logs: _logs, artifacts: _artifacts, steps: _steps, runtimeEndpoint: _runtimeEndpoint, ...execution }) => execution);
+  constructor(private readonly controlPlaneStore: ControlPlaneStoreService) {}
+
+  listExecutions(): Promise<ExecutionRecord[]> {
+    return this.controlPlaneStore.listExecutions();
   }
 
-  getExecution(executionId: string) {
-    const execution = mockExecutionDetails.find((candidate) => candidate.id === executionId);
+  createExecution(input: CreateExecutionInput): Promise<ExecutionRecord> {
+    return this.controlPlaneStore.createExecution(input);
+  }
 
-    if (!execution) {
-      throw new NotFoundException(`Execution ${executionId} was not found`);
-    }
-
-    return execution;
+  getExecutionById(id: string): Promise<ExecutionRecord> {
+    return this.controlPlaneStore.getExecutionById(id);
   }
 }

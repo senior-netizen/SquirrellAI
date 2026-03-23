@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { mockAgents } from '../data/mock-data';
+import type { AgentRecord } from '@squirrellai/contracts';
+import { ControlPlaneStoreService } from '../persistence/control-plane-store.service';
 
 @Injectable()
 export class AgentsService {
-  listAgents(): typeof mockAgents {
-    return mockAgents;
+  constructor(private readonly controlPlaneStore: ControlPlaneStoreService) {}
+
+  listAgents(): Promise<AgentRecord[]> {
+    return this.controlPlaneStore.listAgents();
   }
 }
