@@ -1,12 +1,22 @@
 {
   "name": "@squirrell/ai-engine",
   "version": "0.1.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "private": true,
+  "main": "dist/main.js",
+  "types": "dist/main.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "lint": "eslint 'src/**/*.ts'"
   },
   "dependencies": {
-    "@squirrell/observability": "0.1.0"
+    "@squirrell/observability": "workspace:*",
+    "bullmq": "^5.34.10",
+    "pg": "^8.13.1",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.20"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2"
   }
 }

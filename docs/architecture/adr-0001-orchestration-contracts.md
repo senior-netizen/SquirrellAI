@@ -1,40 +1,41 @@
-# ADR-0001: Explicit orchestration contracts across the control plane, AI engine, and sandbox
+# ADR-0001: Explicit orchestration contracts across the API gateway, AI engine worker, and sandbox
 
 - Status: Accepted
 - Date: 2026-03-22
 
-## Context
+## 1. Problem analysis
 
-The platform needs a clear separation of concerns before business logic is implemented. Without explicit orchestration contracts, the system risks coupling persistence concerns, agent reasoning, and runtime isolation into one implicit workflow. That would make the platform hard to audit, hard to retry deterministically, and unsafe to evolve.
+The platform needs a clear separation of concerns before business logic is implemented. Without explicit orchestration contracts, the system risks coupling persistence concerns, queueing, agent reasoning, and runtime isolation into one implicit workflow. That would make the platform hard to audit, hard to retry deterministically, and unsafe to evolve.
 
 The architecture has three independent responsibilities:
 
-1. **NestJS control plane** must remain the system of record for execution identity, durable state, lifecycle ownership, and auditability.
-2. **FastAPI AI engine** must act as a deterministic executor that transforms inputs into plans, tool calls, observations, and final outputs using explicit contracts.
-3. **Docker sandbox** must isolate runtime side effects so tools execute in a constrained environment with bounded capabilities.
+1. **API gateway** must remain the system of record for execution identity, durable state, lifecycle ownership, and auditability.
+2. **AI engine worker** must act as a deterministic executor that transforms inputs into plans, tool calls, observations, and final outputs using explicit contracts.
+3. **Sandbox/runtime boundary** must isolate runtime side effects so tools execute in a constrained environment with bounded capabilities.
 
 This split is required to preserve deterministic orchestration, replayability, observability, and operational safety.
 
-## Decision
+## 2. System design
 
-We will define orchestration as an explicit contract between three bounded contexts:
+We define orchestration as an explicit contract between three bounded contexts:
 
-### 1. NestJS control plane: system of record
+### 1. API gateway: system of record
 
-The control plane owns:
+The API gateway owns:
 
 - execution identifiers
 - request acceptance and idempotency
-- durable execution state
+- durable execution state in Postgres
 - transition validation
 - append-only execution logs
-- operator and API facing read models
+- queue dispatch into Redis/BullMQ
+- operator- and API-facing read models
 
-The control plane does **not** implement planning, reasoning, or tool execution policy. It persists what happened and governs whether a transition is legal.
+The API gateway does **not** implement planning, reasoning, or tool execution policy. It persists what happened and governs whether a transition is legal.
 
-### 2. FastAPI AI engine: deterministic executor
+### 2. AI engine worker: deterministic executor
 
-The AI engine owns:
+The AI engine worker owns:
 
 - prompt normalization
 - intent parsing
@@ -43,10 +44,11 @@ The AI engine owns:
 - observation analysis
 - retry decisions
 - final output assembly
+- retry scheduling through Redis/BullMQ
 
 The AI engine does **not** become the durable source of truth. It consumes and emits typed contracts. Given the same deterministic inputs, model configuration, and tool responses, it should produce equivalent state transition intents and outputs.
 
-### 3. Docker sandbox: isolated runtime
+### 3. Sandbox/runtime boundary: isolated side effects
 
 The sandbox owns:
 
@@ -58,18 +60,18 @@ The sandbox owns:
 
 The sandbox does **not** own orchestration state. It is an execution substrate invoked by the AI engine or supporting tool runtime.
 
-## State model
+## 3. Implementation
+
+### State model
 
 Executions move through the following lifecycle states:
 
-- `RECEIVED`
-- `PARSED`
-- `PLANNED`
-- `ACTING`
-- `OBSERVING`
-- `RETRYING`
-- `SUCCEEDED`
-- `FAILED`
+- `queued`
+- `running`
+- `retrying`
+- `succeeded`
+- `failed`
+- `cancelled`
 
 Every state transition must record:
 
@@ -77,56 +79,36 @@ Every state transition must record:
 - next state
 - tool invoked
 - deterministic input payload
-- output payload hash
+- output payload hash or redacted payload
 - timestamp
+- correlation identifier
 
 These fields are mandatory so the system can support replay, auditing, debugging, and policy enforcement.
 
-## Data flow
+### Data flow
 
-1. A client submits a prompt to the control plane.
-2. The control plane persists an execution in `RECEIVED` and emits a request to the AI engine.
-3. The AI engine parses intent and proposes `RECEIVED -> PARSED`.
-4. The AI engine creates a plan and proposes `PARSED -> PLANNED`.
-5. The AI engine issues tool invocations through the sandbox and proposes `PLANNED/RETRYING -> ACTING`.
-6. Tool outputs are analyzed and recorded as `ACTING -> OBSERVING`.
-7. The AI engine either retries (`OBSERVING -> RETRYING`) or completes (`OBSERVING -> SUCCEEDED`) or fails (`OBSERVING/RETRYING/ACTING -> FAILED`).
-8. The control plane validates each transition, persists it, and exposes the final execution state and log.
+1. A client submits a prompt to the API gateway.
+2. The API gateway persists an execution in Postgres and emits a dispatch job to Redis.
+3. The AI engine worker consumes the job and loads the execution state from Postgres.
+4. The AI engine worker records parsing, planning, execution, and logging side effects back into Postgres.
+5. The AI engine either completes the execution or schedules a bounded retry through Redis.
+6. Operators and clients read execution state from the API gateway.
 
-## Consequences
+### Required infrastructure
 
-### Positive
+- Postgres for durable execution state.
+- Redis for BullMQ dispatch and retry queues.
+- Optional sandbox/runtime infrastructure for side-effecting tools.
 
-- Durable state remains separate from execution logic.
-- Agent behavior becomes replayable and easier to test.
-- Sandbox isolation is explicit rather than incidental.
-- Failure handling is observable at the transition boundary.
-- Contracts can evolve with backward-compatible versioning.
+## 4. Edge cases
 
-### Negative
+- If Redis is unavailable during request acceptance, the API gateway must fail fast rather than acknowledge an execution it cannot dispatch.
+- If the AI engine crashes after updating state but before acknowledging a job, retry semantics must remain idempotent at the execution level.
+- If sandbox execution produces sensitive data, log payloads must be redacted before persistence.
+- If Postgres is unavailable, neither service can safely claim progress on execution state.
 
-- More up-front contract design is required.
-- Cross-service schema versioning must be maintained.
-- Deterministic payload capture adds storage and hashing overhead.
+## 5. Improvements
 
-## Operational notes
-
-- State transitions must be append-only in the execution log.
-- Transition validation must happen before persistence commits the next state.
-- Tool outputs should be hashed before storage when payload size or sensitivity requires indirection.
-- Idempotent submission keys should be supported by the control plane.
-- Retry policy should be explicit and bounded by attempt count and failure class.
-
-## Alternatives considered
-
-### Single service orchestration
-
-Rejected because it blurs system-of-record responsibilities with execution logic and reduces operational isolation.
-
-### Sandbox-managed execution state
-
-Rejected because runtimes should be ephemeral and replaceable, not durable authorities.
-
-### AI engine as system of record
-
-Rejected because model-serving infrastructure is not the right place for durable audit state, transition governance, or operator-facing lifecycle management.
+- Add an outbox pattern if queue publish atomicity becomes a hard requirement.
+- Introduce explicit state transition validators shared between the gateway and worker.
+- Persist retry classification and terminal failure taxonomy for better operations visibility.

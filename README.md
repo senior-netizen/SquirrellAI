@@ -1,8 +1,8 @@
 # SquirrellAI
 
-SquirrellAI is organized as a polyglot monorepo with a clear split between the control plane and the execution plane.
+SquirrellAI is organized as a monorepo with a production service topology rooted in `services/*` and shared infrastructure packages in `packages/*`.
 
-## System boundaries
+## 1. Problem analysis
 
 - `apps/core-platform`: NestJS control-plane API for agent registry, authentication, execution lifecycle management, tool registry, and observability.
 - `apps/ai-engine`: FastAPI execution-plane service responsible for orchestration-facing AI execution logic and tool adapters.
@@ -11,7 +11,19 @@ SquirrellAI is organized as a polyglot monorepo with a clear split between the c
 - `infra/docker` and `infra/compose`: container definitions and local orchestration primitives.
 - `docs/architecture` and `docs/api`: architecture records and API contract references.
 
-## Repository layout
+- `services/*` contains the production-oriented control-plane API gateway and AI execution worker with real Postgres and Redis integration.
+- `apps/*` contains earlier scaffolds and prototypes that are useful for exploration but are **not** the authoritative deployment path.
+
+The canonical production path is therefore:
+
+- `services/api-gateway` for the control-plane ingress, execution persistence, and queue dispatch.
+- `services/ai-engine` for execution processing and retry orchestration.
+- `packages/observability` for the shared entities, correlation, redaction, and queue contracts.
+- `packages/contracts` for schema artifacts shared with external consumers.
+
+## 2. System design
+
+### Canonical production topology
 
 ```text
 apps/
@@ -19,31 +31,32 @@ apps/
   ai-engine/
   web/
 packages/
-  contracts/
+  observability/   # shared entities, queue config, correlation, redaction
+  contracts/       # shared external contracts
 infra/
-  docker/
-  compose/
+  compose/         # local multi-service topology
+  docker/          # container build definitions for canonical services
 docs/
-  architecture/
-  api/
+  architecture/    # ADRs and topology notes
+apps/              # legacy prototypes; not for production deployment
 ```
 
-## Local startup flow
+## 3. Implementation
 
 ### Prerequisites
+
 - Node.js 22+
 - pnpm 9+
-- Python 3.10+
+- Docker with Compose support for local infra bring-up
 
 ### Install dependencies
 
 ```bash
 corepack enable
 pnpm install --recursive
-python -m pip install -e .[dev]
 ```
 
-### Run the services locally
+### Build the canonical services
 
 ```bash
 pnpm --filter @squirrellai/core-platform start:dev
@@ -66,9 +79,22 @@ To point the console at different backend hosts, define `window.__SQUIRRELLAI_CO
 docker compose -f infra/compose/docker-compose.yml up --build
 ```
 
-## Production orientation
+This Compose stack starts services in the following order:
 
-- Shared execution and tool contracts are versioned in-repo.
-- The control plane and execution plane can be built and deployed independently.
-- Baseline CI validates TypeScript and Python toolchains separately.
-- Documentation captures architecture decisions before feature work begins.
+1. `postgres`
+2. `redis`
+3. `api-gateway`
+4. `ai-engine`
+
+## 4. Edge cases
+
+- `apps/*` remains in the repository for reference only; operators should not deploy it.
+- `services/api-gateway` requires both `DATABASE_URL` and `REDIS_URL` to accept and enqueue executions.
+- `services/ai-engine` requires the same infrastructure because it reads execution state from Postgres and consumes BullMQ queues from Redis.
+- The Postgres schema is initialized from `services/api-gateway/migrations/0001_observability.sql` during local Compose startup.
+
+## 5. Improvements
+
+- Add a dedicated migration runner service instead of relying on Postgres init scripts for local bootstrapping.
+- Add health endpoints and readiness probes to both canonical services.
+- Replace default local credentials with secret-managed values in non-local environments.
