@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.squirrellai.local/control-plane-store.schema.json",
+  "title": "ControlPlaneStoreSnapshot",
+  "type": "object",
+  "required": ["version", "agents", "tools", "executions"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "agents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "status", "description"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["available", "degraded", "disabled"] },
+          "description": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "owner", "timeoutSeconds"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "owner": { "type": "string", "minLength": 1 },
+          "timeoutSeconds": { "type": "integer", "minimum": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "executions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "agentId", "prompt", "state", "requestedBy", "createdAt", "updatedAt"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "agentId": { "type": "string", "minLength": 1 },
+          "prompt": { "type": "string", "minLength": 1 },
+          "state": {
+            "$ref": "execution-state.schema.json"
+          },
+          "requestedBy": { "type": "string", "minLength": 1 },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
